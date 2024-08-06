@@ -1,18 +1,19 @@
-provider "aws" {
-  region = "us-east-1"
+provider "alicloud" {
+  # Default provider configuration (optional)
+  region = "cn-beijing"  # Default region; adjust as needed
 }
 
-provider "aws" {
-  alias  = "use1"
-  region = "us-east-1"
+provider "alicloud" {
+  alias  = "beijing"
+  region = "cn-beijing"
 }
 
-provider "aws" {
-  alias  = "use2"
-  region = "us-east-2"
+provider "alicloud" {
+  alias  = "hangzhou"
+  region = "cn-hangzhou"
 }
 
-provider "aws" {
-  alias  = "usw2"
-  region = "us-west-2"
+provider "alicloud" {
+  alias  = "shanghai"
+  region = "cn-shanghai"
 }

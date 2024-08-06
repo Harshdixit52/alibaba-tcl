@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# ECS config
+# Alibaba Cloud ECS config
 {
   echo "ECS_CLUSTER=${cluster_name}"
 } >> /etc/ecs/ecs.config
 
-start ecs
+# Start ECS agent
+systemctl start ecs
 
 echo "Done"

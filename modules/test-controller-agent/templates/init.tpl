@@ -4,13 +4,10 @@
 # Install packages
 packages:
   - python3-pip
-  - awscli
   - curl
   - zlib1g-dev
   - iproute2
-  - linux-tools-common
-  - linux-tools-generic
-  - linux-tools-5.19.0-1025-aws
+  - nfs-utils
   - iperf
   - gdb
   - libpcap-dev
@@ -19,9 +16,9 @@ packages:
 write_files:
   - path: /etc/environment
     content: |
-      AWS_REGION=${REGION}
-      BINARIES_S3_BUCKET=${BINARIES_S3_BUCKET}
-      OUTPUTS_S3_BUCKET=${OUTPUTS_S3_BUCKET}
+      REGION=${REGION}
+      BINARIES_OSS_BUCKET=${BINARIES_OSS_BUCKET}
+      OUTPUTS_OSS_BUCKET=${OUTPUTS_OSS_BUCKET}
     append: true
   - path: /root/update-networking.sh
     permissions: '0755'
@@ -54,7 +51,7 @@ write_files:
       rm -rf /root/agentdata
       mkdir /root/agentdata
       cd /root/agentdata
-      EC2_INSTANCE_ID=`curl http://169.254.169.254/latest/meta-data/instance-id` /root/agent -host=${COORDINATOR_HOST} -port=${COORDINATOR_PORT}
+      INSTANCE_ID=`curl http://100.100.100.200/latest/meta-data/instance-id` /root/agent -host=${COORDINATOR_HOST} -port=${COORDINATOR_PORT}
   - path: /etc/systemd/system/cbdc-test-agent.service
     permissions: '0644'
     content: |
@@ -67,11 +64,11 @@ write_files:
       Type=simple
       Restart=always
       RestartSec=3
-      Environment="AWS_REGION=${REGION}"
-      Environment="BINARIES_S3_BUCKET=${BINARIES_S3_BUCKET}"
-      Environment="OUTPUTS_S3_BUCKET=${OUTPUTS_S3_BUCKET}"
-      Environment="S3_INTERFACE_ENDPOINT=${S3_INTERFACE_ENDPOINT}"
-      Environment="S3_INTERFACE_REGION=${S3_INTERFACE_REGION}"
+      Environment="REGION=${REGION}"
+      Environment="BINARIES_OSS_BUCKET=${BINARIES_OSS_BUCKET}"
+      Environment="OUTPUTS_OSS_BUCKET=${OUTPUTS_OSS_BUCKET}"
+      Environment="OSS_INTERFACE_ENDPOINT=${OSS_INTERFACE_ENDPOINT}"
+      Environment="OSS_INTERFACE_REGION=${OSS_INTERFACE_REGION}"
       ExecStart=/root/start-agent.sh
 
       StandardOutput=append:/var/log/cbdc_agent_stdout.log
@@ -82,12 +79,12 @@ write_files:
 
 # Run commands
 runcmd:
-  - curl "https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb" -o /tmp/amazon-cloudwatch-agent.deb
-  - dpkg -i -E /tmp/amazon-cloudwatch-agent.deb
-  - amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-Config.json -s
+  - curl "https://cloud-watch-agent-url" -o /tmp/cloud-watch-agent.rpm # Update this URL to the Alibaba Cloud equivalent
+  - rpm -ivh /tmp/cloud-watch-agent.rpm
+  - cloud-watch-agent-ctl -a fetch-config -m ecs -c ssm:CloudWatch-Agent-Config.json -s
   - /root/update-networking.sh
-  - aws --region ${REGION} --endpoint-url ${S3_INTERFACE_ENDPOINT} s3 cp s3://${BINARIES_S3_BUCKET}/${S3_BUCKET_PREFIX}/agent-latest /root/agent
-  - aws --region ${REGION} --endpoint-url ${S3_INTERFACE_ENDPOINT} s3 cp s3://${BINARIES_S3_BUCKET}/${S3_BUCKET_PREFIX}/requirements.txt /root/requirements.txt
+  - aliyun oss cp oss://${BINARIES_OSS_BUCKET}/${OSS_BUCKET_PREFIX}/agent-latest /root/agent --endpoint ${OSS_INTERFACE_ENDPOINT}
+  - aliyun oss cp oss://${BINARIES_OSS_BUCKET}/${OSS_BUCKET_PREFIX}/requirements.txt /root/requirements.txt --endpoint ${OSS_INTERFACE_ENDPOINT}
   - chmod +x /root/agent
   - pip3 install -r /root/requirements.txt
   - systemctl daemon-reload

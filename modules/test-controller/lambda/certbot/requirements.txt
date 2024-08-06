@@ -1,2 +1,2 @@
 certbot
-certbot-dns-route53
+certbot-dns-alibaba-cloud

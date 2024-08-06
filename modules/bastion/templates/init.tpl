@@ -5,34 +5,34 @@
 
 # Install packages
 packages:
-  - awscli
-  - nfs-common
+  - aliyun-cli
+  - nfs-utils
 
 # Download RDS cert bundle.
 runcmd:
   - mkdir -p ${CERTS_MOUNT_PATH} ${TESTRUNS_MOUNT_PATH} ${BINARIES_MOUNT_PATH}
   - |
-    echo "$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).${TESTRUNS_EFS_ID}.efs.${REGION}.amazonaws.com:/ \
+    echo "${REGION}.${TESTRUNS_EFS_ID}.efs.aliyuncs.com:/ \
     ${TESTRUNS_MOUNT_PATH} \
-    nfs4 \
-    ro,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" \
+    nfs \
+    ro,nfsvers=4,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" \
     >> /etc/fstab
   - |
-    echo "$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).${CERTS_EFS_ID}.efs.${REGION}.amazonaws.com:/ \
+    echo "${REGION}.${CERTS_EFS_ID}.efs.aliyuncs.com:/ \
     ${CERTS_MOUNT_PATH} \
-    nfs4 \
-    rw,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" \
+    nfs \
+    rw,nfsvers=4,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" \
     >> /etc/fstab
   - |
-    echo "$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).${BINARIES_EFS_ID}.efs.${REGION}.amazonaws.com:/ \
+    echo "${REGION}.${BINARIES_EFS_ID}.efs.aliyuncs.com:/ \
     ${BINARIES_MOUNT_PATH} \
-    nfs4 \
-    nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" \
+    nfs \
+    nfsvers=4,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" \
     >> /etc/fstab
-  - mount -a -t nfs4
+  - mount -a -t nfs
   - |
-    aws \
-    --region ${REGION} \
-    ec2 associate-address \
-    --instance-id "$(curl -s http://169.254.169.254/latest/meta-data/instance-id)" \
-    --allocation-id ${EIP_ASSOCIATION_ID}
+    aliyun ecs \
+    AssociateEipAddress \
+    --InstanceId "$(curl -s http://100.100.100.200/latest/meta-data/instance-id)" \
+    --AllocationId ${EIP_ASSOCIATION_ID} \
+    --RegionId ${REGION}
